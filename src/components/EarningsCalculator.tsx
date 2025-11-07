@@ -18,6 +18,8 @@ interface CitySearchProps {
 const CitySearch = ({ selectedCity, onCitySelect }: CitySearchProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+    const [isClickingDropdown, setIsClickingDropdown] = useState(false);
+
 
   const allCities = cityTiers.flatMap(tier => tier.cities);
   
@@ -26,47 +28,58 @@ const CitySearch = ({ selectedCity, onCitySelect }: CitySearchProps) => {
   );
 
   const handleCitySelect = (city: string) => {
-    onCitySelect(city);
+    onCitySelect(city); // This should update the parent state
     setSearchTerm(city);
     setIsOpen(false);
   };
 
   return (
-    <div className="relative w-full">
+     <div className="relative w-full">
       <Label htmlFor="city-search" className="text-sm font-medium mb-2 block">
         Select Your City
       </Label>
       <div className="relative">
         <Input
-  id="city-search"
-  type="text"
-  placeholder="Search for your city..."
-  value={searchTerm}
-  onChange={(e) => {
-    setSearchTerm(e.target.value);
-    setIsOpen(true);
-  }}
-  onFocus={() => setIsOpen(true)}
-  onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-  className="w-full pr-10 h-[54px] text-base rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-  style={{
-    backgroundColor: "#f9fbfd",
-  }}
-/>
-
+          id="city-search"
+          type="text"
+          placeholder="Search for your city..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            // Add a small delay to allow click event to register
+            setTimeout(() => {
+              if (!isClickingDropdown) {
+                setIsOpen(false);
+              }
+            }, 200);
+          }}
+          className="w-full pr-10 h-[54px] text-base rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          style={{
+            backgroundColor: "#f9fbfd",
+          }}
+        />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
           <MapPin className="h-4 w-4 text-muted-foreground" />
         </div>
       </div>
       
       {isOpen && searchTerm && (
-        <div className="absolute z-50 w-full -mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div 
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+          onMouseDown={() => setIsClickingDropdown(true)}
+          onMouseUp={() => setIsClickingDropdown(false)}
+        >
           {filteredCities.length > 0 ? (
             filteredCities.map((city) => (
               <div
                 key={city}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0"
+                className="px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-b-0"
                 onClick={() => handleCitySelect(city)}
+                onMouseDown={(e) => e.preventDefault()} // Prevent input blur
               >
                 {city}
               </div>
@@ -87,12 +100,17 @@ export const EarningsCalculator = ({ category = "ccm-cm" }: EarningsCalculatorPr
   const [subscriptions, setSubscriptions] = useState([5]);
   const [selectedCity, setSelectedCity] = useState("");
 
+  // Debug: Let's check if selectedCity is updating
+  console.log("Selected City:", selectedCity);
+
   // Get current tier based on selected city (internal calculation only)
   const currentTier = useMemo(() => {
     if (!selectedCity) return cityTiers[1]; // Default to Tier 2
-    return cityTiers.find(tier => 
+    const foundTier = cityTiers.find(tier => 
       tier.cities.includes(selectedCity)
-    ) || cityTiers[1];
+    );
+    console.log("Found Tier:", foundTier);
+    return foundTier || cityTiers[1];
   }, [selectedCity]);
 
   // Base rates (averages of the ranges)
@@ -117,7 +135,7 @@ export const EarningsCalculator = ({ category = "ccm-cm" }: EarningsCalculatorPr
       <CardHeader className="text-center pb-4">
         <div className="grid md:grid-cols-2 gap-6 items-start mb-6">
           {/* Left Side - City Search */}
-          <div className="space-y-2">
+          <div className="space-y-2 mt-1">
             <CitySearch 
               selectedCity={selectedCity} 
               onCitySelect={setSelectedCity} 
@@ -127,14 +145,14 @@ export const EarningsCalculator = ({ category = "ccm-cm" }: EarningsCalculatorPr
           {/* Right Side - Selected City Display */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Selected City</Label>
-            <div className="flex items-center gap-3 p-3 bg-accent rounded-lg border">
+            <div className="flex items-center gap-3 p-3 bg-accent rounded-lg border min-h-[54px]">
               {selectedCity ? (
                 <>
-                  <MapPin className="h-7 w-5 text-primary" />
+                  <MapPin className="h-5 w-5 text-primary" />
                   <span className="font-semibold text-lg">{selectedCity}</span>
                 </>
               ) : (
-                <span className="text-muted-foreground  ">No city selected</span>
+                <span className="text-muted-foreground">No city selected</span>
               )}
             </div>
           </div>
