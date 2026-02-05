@@ -31,6 +31,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ExpoScaleEase } from "gsap/EasePack";
 import { cityTiers } from "../data/cityTiers";
 import RevenueStreamsSection from "@/components/revenueStream";
+import JobListingsSection from "./JobListingsSection";
 
 const BentoSkeleton = () => (
   <div className="h-full flex flex-col p-6 animate-pulse">
@@ -830,7 +831,14 @@ const Index = () => {
           </div>
         </div>
       </section>
-
+       
+      <section className="py-20">
+  <JobListingsSection 
+    siteFilter="telthcare" 
+    showFilters={true}
+    maxItems={6}
+  />
+</section>
      
 
       {/* Footer */}
